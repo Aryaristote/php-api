@@ -1,21 +1,22 @@
 <?php
 
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: GET");
+header("Access-Control-Allow-Methods: PUT");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Request-Width");
 
 include("functions.php");
 
 $requestMethod = $_SERVER['REQUEST_METHOD'];
-if($requestMethod == 'GET') {
-    if(isset($_GET['id'])){
-        $customer = getCustomer($_GET);
-        echo $customer;
-    }else{
-        $customerList = getCustomerList();
-        echo $customerList;
+if($requestMethod == 'PUT') {
+    $inputData = json_decode(file_get_contents('php://input'), true);
+    if(empty($inputData)){
+        $updateCustomer = updateCustomer($_POST, $_GET);
+    } else {
+        $updateCustomer = updateCustomer($inputData, $_GET);
     }
+    echo $updateCustomer;
 } else {
     $data = [
         'status' => '405',

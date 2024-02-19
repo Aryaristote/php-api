@@ -78,3 +78,120 @@ function storeCustomer($customerInput) {
         }
     }
 }
+
+//Get one customer.
+function getCustomer($customerParams) {
+    global $conn;
+    if ($customerParams['id'] == null) {
+        return error422('No customer id provided');
+    }
+
+    $customerId = mysqli_real_escape_string($conn, $customerParams['id']);
+    $query = "SELECT * FROM customers WHERE id = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, 's', $customerId);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    if ($result) {
+        if (mysqli_num_rows($result) == 1) {
+            $res = mysqli_fetch_assoc($result);
+            $data = [
+                'status' => 200,
+                'message' => 'Customer fetched successfully',
+                'data' => $res,
+            ];
+            http_response_code(200);
+            return json_encode($data);
+        } else {
+            $data = [
+                'status' => 404,
+                'message' => 'No customers were found'
+            ];
+            http_response_code(404);
+            return json_encode($data);
+        }
+    } else {
+        $data = [
+            'status' => 500,
+            'message' => 'Internal Server Error'
+        ];
+        http_response_code(500);
+        return json_encode($data);
+    }
+}
+
+//Update customer information.
+function updateCustomer($customerInput, $customerParams) {
+    global $conn;
+
+    if (empty($customerParams['id'])) {
+        return error422('No customer id provided');
+    }
+
+    $customerId = mysqli_real_escape_string($conn, $customerParams['id']);
+
+    $name = mysqli_real_escape_string($conn, $customerInput['name']);
+    $email = mysqli_real_escape_string($conn, $customerInput['email']);
+    $phone = mysqli_real_escape_string($conn, $customerInput['phone']);
+
+    if (empty(trim($name)) || empty(trim($email)) || empty(trim($phone))) {
+        return error422('Please enter name, email, and phone number');
+    }
+
+    // Prepare and bind the update statement
+    $query = "UPDATE customers SET name = ?, email = ?, phone = ? WHERE id = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, 'sssi', $name, $email, $phone, $customerId);
+    $result = mysqli_stmt_execute($stmt);
+
+    if ($result) {
+        $data = [
+            'status' => 200,
+            'message' => 'Customer updated successfully'
+        ];
+        http_response_code(200);
+        return json_encode($data);
+    } else {
+        $data = [
+            'status' => 500,
+            'message' => 'Internal Server Error'
+        ];
+        http_response_code(500);
+        return json_encode($data);
+    }
+}
+
+//Delete a customer
+function deleteCustomer($customerParams) {
+    global $conn;
+
+    if (empty($customerParams['id'])) {
+        return error422('No customer id provided');
+    }
+
+    $customerId = mysqli_real_escape_string($conn, $customerParams['id']);
+
+    // Prepare and bind the delete statement
+    $query = "DELETE FROM customers WHERE id = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, 'i', $customerId);
+    $result = mysqli_stmt_execute($stmt);
+
+    if ($result) {
+        $data = [
+            'status' => 200,
+            'message' => 'Customer deleted successfully'
+        ];
+        http_response_code(200);
+        return json_encode($data);
+    } else {
+        $data = [
+            'status' => 500,
+            'message' => 'Internal Server Error'
+        ];
+        http_response_code(500);
+        return json_encode($data);
+    }
+}
+
